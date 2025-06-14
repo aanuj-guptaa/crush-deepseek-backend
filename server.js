@@ -12,26 +12,30 @@ app.use(bodyParser.json());
 
 app.post('/api/analyze', async (req, res) => {
   const prompt = req.body.prompt;
-  const apiKey = process.env.HUGGINGFACE_API_KEY;
+  const apiKey = process.env.DEEPSEEK_API_KEY;
 
   try {
     const response = await axios.post(
-      'https://api-inference.huggingface.co/models/deepseek/deepseek-r1-0528',
+      'https://api.deepseek.com/v1/chat/completions',
       {
-        inputs: prompt,
+        model: 'deepseek/deepseek-r1-0528:free',  // ✅ Free model
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 500,
       },
       {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
       }
     );
 
-    const output = response.data?.[0]?.generated_text || 'No response generated.';
+    const output = response.data.choices[0].message.content;
     res.json({ output });
   } catch (error) {
-    console.error('Hugging Face API error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Something went wrong with the Hugging Face API.' });
+    console.error('DeepSeek API error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Something went wrong with DeepSeek.' });
   }
 });
 
