@@ -1,40 +1,37 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
 app.post('/api/analyze', async (req, res) => {
   const { prompt } = req.body;
-
   try {
-    const response = await axios.post(
+    const rsp = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: "openai/gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }],
+        model: 'deepseek/deepseek-chat-v3-0324:free',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 500
       },
       {
         headers: {
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
       }
     );
-
-    const output = response.data.choices?.[0]?.message?.content || '⚠️ No response generated.';
+    const output = rsp.data.choices?.[0]?.message?.content || '⚠️ No response';
     res.json({ output });
-  } catch (error) {
-    console.error('OpenAI API error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Something went wrong with the AI API.' });
+  } catch (err) {
+    console.error('OpenRouter error:', err.response?.data || err.message);
+    res.status(500).json({ error: 'API error or possibly rate-limited.' });
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Server listening on port ${PORT}`));
