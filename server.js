@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -13,35 +12,26 @@ app.use(bodyParser.json());
 
 app.post('/api/analyze', async (req, res) => {
   const prompt = req.body.prompt;
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiKey = process.env.HUGGINGFACE_API_KEY;
 
   try {
     const response = await axios.post(
-      'https://api.deepseek.com/v1/chat/completions',
+      'https://api-inference.huggingface.co/models/deepseek/deepseek-r1-0528',
       {
-        model: 'deepseek/deepseek-r1-0528:free',
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
+        inputs: prompt,
       },
       {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
       }
     );
 
-    const output = response.data.choices[0].message.content;
+    const output = response.data?.[0]?.generated_text || 'No response generated.';
     res.json({ output });
   } catch (error) {
-    console.error('DeepSeek API error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Something went wrong with the AI API.' });
+    console.error('Hugging Face API error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Something went wrong with the Hugging Face API.' });
   }
 });
 
