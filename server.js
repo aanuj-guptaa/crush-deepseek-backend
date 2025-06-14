@@ -4,34 +4,43 @@ const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
 app.post('/api/analyze', async (req, res) => {
   const { prompt } = req.body;
+
   try {
-    const rsp = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions',
+    const response = await axios.post(
+      'https://api.deepseek.com/v1/chat/completions',
       {
-        model: 'deepseek/deepseek-chat-v3-0324:free',
-        messages: [{ role: 'user', content: prompt }],
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
         temperature: 0.7,
-        max_tokens: 500
+        max_tokens: 500,
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        },
       }
     );
-    const output = rsp.data.choices?.[0]?.message?.content || '⚠️ No response';
+
+    const output = response.data.choices[0].message.content;
     res.json({ output });
   } catch (err) {
-    console.error('OpenRouter error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'API error or possibly rate-limited.' });
+    console.error('DeepSeek API error:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Something went wrong while calling DeepSeek API.' });
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Server listening on port ${PORT}`));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});
