@@ -4,7 +4,6 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const bodyParser = require('body-parser');
-const pool = require('./db/connect')
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -54,7 +53,9 @@ app.post('/api/analyze', async (req, res) => {
     res.status(500).json({ error: 'Something went wrong with the AI API.' });
   }
 });
-
+app.get('/',(req,res) => {
+  res.send('CrushAnalyzer Backend is live');
+}); 
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
