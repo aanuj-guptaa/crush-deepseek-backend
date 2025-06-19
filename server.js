@@ -1,5 +1,5 @@
 require('dotenv').config();
-const pool = require('./db/connect')
+const pool = require('./db/connect');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -11,7 +11,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
-//test route
+// Basic route to check Render status
+app.get('/', (req, res) => {
+  res.send('✨ CrushAnalyzer Backend is Live!');
+});
+
+// Test route for DB
 app.get('/api/test-db', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');
@@ -22,10 +27,11 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-
 app.post('/api/analyze', async (req, res) => {
   const prompt = req.body.prompt;
   const apiKey = process.env.OPENROUTER_API_KEY;
+
+  console.log('📝 Incoming Prompt:', prompt); // ✅ Render logs
 
   try {
     const response = await axios.post(
@@ -40,22 +46,22 @@ app.post('/api/analyze', async (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://your-site.com', // optional, for tracking
-          'X-Title': 'CrushAnalyzer',             // optional, for tracking
+          'HTTP-Referer': 'https://your-site.com',
+          'X-Title': 'CrushAnalyzer',
         },
       }
     );
 
     const output = response.data.choices[0].message.content;
+    console.log('✅ AI Response:', output); // ✅ Render logs
+
     res.json({ output });
   } catch (error) {
-    console.error('OpenRouter/DeepSeek API error:', error.response?.data || error.message);
+    console.error('❌ OpenRouter/DeepSeek API error:', error.response?.data || error.message);
     res.status(500).json({ error: 'Something went wrong with the AI API.' });
   }
 });
-app.get('/',(req,res) => {
-  res.send('CrushAnalyzer Backend is live');
-}); 
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
