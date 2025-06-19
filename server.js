@@ -33,7 +33,7 @@ app.post('/api/analyze', async (req, res) => {
 
   console.log('🔑 Using API Key:', apiKey ? '[HIDDEN]' : '❌ Missing');
 
-  console.log('📝 Incoming Prompt:', prompt); // ✅ Render logs
+  console.log('📝 Incoming Prompt:', prompt); 
 
   try {
     const response = await axios.post(
@@ -47,7 +47,7 @@ app.post('/api/analyze', async (req, res) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Authorization': process.env.OPENROUTER_API_KEY, 
           'HTTP-Referer': 'https://your-site.com',
           'X-Title': 'CrushAnalyzer',
         },
@@ -55,7 +55,7 @@ app.post('/api/analyze', async (req, res) => {
     );
 
     const output = response.data.choices[0].message.content;
-    console.log('✅ AI Response:', output); // ✅ Render logs
+    console.log(' AI Response:', output); 
 
     res.json({ output });
   } catch (error) {
