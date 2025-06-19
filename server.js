@@ -1,5 +1,7 @@
 // server.js
 require('dotenv').config();
+console.log("🔑 Loaded API Key from .env:", process.env.OPENROUTER_API_KEY ? "[PRESENT]" : "❌ MISSING");
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
