@@ -31,6 +31,8 @@ app.post('/api/analyze', async (req, res) => {
   const prompt = req.body.prompt;
   const apiKey = process.env.OPENROUTER_API_KEY;
 
+  console.log('🔑 Using API Key:', apiKey ? '[HIDDEN]' : '❌ Missing');
+
   console.log('📝 Incoming Prompt:', prompt); // ✅ Render logs
 
   try {
