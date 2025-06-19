@@ -47,7 +47,7 @@ app.post('/api/analyze', async (req, res) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': process.env.OPENROUTER_API_KEY, 
+          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`, 
           'HTTP-Referer': 'https://your-site.com',
           'X-Title': 'CrushAnalyzer',
         },
