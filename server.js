@@ -99,7 +99,7 @@ app.post('/api/analyze', async (req, res) => {
       },
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer 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`,
           'HTTP-Referer': 'http://localhost:3000', 
           'X-Title': 'CrushAnalyzer',
           'Content-Type': 'application/json',
