@@ -10,9 +10,15 @@ const pool = require('./db/connect');
 const createUsersTable = require('./db/createTables');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+app.use(cors({
+  origin: 'http://localhost:3000', // Your frontend URL
+  methods: ['GET', 'POST'],        // Allowed methods
+  credentials: true                // If using cookies/auth
+}));
+// const PORT = process.env.PORT || 6000; //changed
+const PORT = 3001;
 
-app.use(cors());
+// app.use(cors());
 app.use(bodyParser.json());
 
 // Create tables on start
@@ -81,14 +87,10 @@ app.post('/api/login', async (req, res) => {
 // 🤖 Analyze route (AI)
 app.post('/api/analyze', async (req, res) => {
   const { prompt, mode } = req.body;
-  
-  const headers = {
-    'Authorization': 'Bearer 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', // Hardcode NEW key
-    'HTTP-Referer': 'http://localhost:3000',
-    'X-Title': 'CrushAnalyzer',
-    'Content-Type': 'application/json',
-    'Accept': 'application/json' // ← OpenRouter sometimes requires this
-  };
+  const apiKey = process.env.OPENROUTER_API_KEY;
+
+  // Debug: Verify key is loading (check server logs)
+  console.log("🔑 API Key Present:", !!apiKey);
 
   try {
     const response = await axios.post(
@@ -97,19 +99,28 @@ app.post('/api/analyze', async (req, res) => {
         model: 'deepseek/deepseek-r1-0528:free',
         messages: [{ role: 'user', content: prompt }],
         temperature: mode === 'savage' ? 0.9 : 0.7,
+        max_tokens: 150
       },
-      { headers }
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': 'http://localhost:3000', // Must match frontend URL
+          'X-Title': 'CrushAnalyzer',
+          'Content-Type': 'application/json'
+        }
+      }
     );
 
     res.json({ output: response.data.choices[0].message.content });
   } catch (error) {
     console.error("💥 FULL ERROR:", {
-      headersSent: headers['Authorization'].slice(0, 10) + '...', // Logs first 10 chars of key
-      error: error.response?.data || error.message
+      config: error.config.headers?.Authorization?.slice(0, 10) + '...', // Logs key prefix
+      status: error.response?.status,
+      data: error.response?.data
     });
     res.status(500).json({ 
       error: "OpenRouter request failed",
-      details: error.response?.data 
+      details: error.response?.data?.error || "Check server logs" 
     });
   }
 });
