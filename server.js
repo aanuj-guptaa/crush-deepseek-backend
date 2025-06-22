@@ -80,13 +80,15 @@ app.post('/api/login', async (req, res) => {
 
 // 🤖 Analyze route (AI)
 app.post('/api/analyze', async (req, res) => {
-  const { prompt,mode } = req.body;
-  const apiKey = process.env.OPENROUTER_API_KEY;
-
-  if (!apiKey) {
-    console.error("missing openrouter key in environemtn variable")
-    return res.status(500).json({ error: "❌server config error" });
-  }
+  const { prompt, mode } = req.body;
+  
+  const headers = {
+    'Authorization': 'Bearer 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', // Hardcode NEW key
+    'HTTP-Referer': 'http://localhost:3000',
+    'X-Title': 'CrushAnalyzer',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json' // ← OpenRouter sometimes requires this
+  };
 
   try {
     const response = await axios.post(
@@ -94,30 +96,20 @@ app.post('/api/analyze', async (req, res) => {
       {
         model: 'deepseek/deepseek-r1-0528:free',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 150,
-        temperature: mode === 'savage' ? 0.9 : 0.7, 
+        temperature: mode === 'savage' ? 0.9 : 0.7,
       },
-      {
-        headers: {
-          'Authorization': `Bearer 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`,
-          'HTTP-Referer': 'http://localhost:3000', 
-          'X-Title': 'CrushAnalyzer',
-          'Content-Type': 'application/json',
-        },
-      }
+      { headers }
     );
 
-    const output = response.data.choices[0]?.message?.content || "⚠️ No response generated.";
-    res.json({ output });
+    res.json({ output: response.data.choices[0].message.content });
   } catch (error) {
-    console.error('❌ Full OpenRouter Error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
+    console.error("💥 FULL ERROR:", {
+      headersSent: headers['Authorization'].slice(0, 10) + '...', // Logs first 10 chars of key
+      error: error.response?.data || error.message
     });
     res.status(500).json({ 
-      error: "Failed to analyze chat",
-      details: error.response?.data?.error?.message || "Check server logs" 
+      error: "OpenRouter request failed",
+      details: error.response?.data 
     });
   }
 });
