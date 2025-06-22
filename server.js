@@ -80,11 +80,12 @@ app.post('/api/login', async (req, res) => {
 
 // 🤖 Analyze route (AI)
 app.post('/api/analyze', async (req, res) => {
-  const prompt = req.body.prompt;
+  const { prompt } = req.body;
   const apiKey = process.env.OPENROUTER_API_KEY;
 
-  console.log('🔑 Using API Key:', apiKey ? '[HIDDEN]' : '❌ MISSING');
-  console.log('📝 Incoming Prompt:', prompt);
+  if (!apiKey) {
+    return res.status(500).json({ error: "❌ API key missing in server environment." });
+  }
 
   try {
     const response = await axios.post(
@@ -92,23 +93,27 @@ app.post('/api/analyze', async (req, res) => {
       {
         model: 'deepseek/deepseek-r1-0528:free',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1000,
-        temperature: 0.7,
+        max_tokens: 150,
+        temperature: req.body.mode === 'savage' ? 0.9 : 0.7, // Dynamic based on frontend's "mode"
       },
       {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://your-website-url.com', // Replace with your frontend URL
+          'X-Title': 'CrushAnalyzer',
+          'Content-Type': 'application/json',
         },
       }
     );
 
-    const output = response.data.choices[0].message.content;
-    console.log('✅ AI Response:', output);
+    const output = response.data.choices[0]?.message?.content || "⚠️ No response generated.";
     res.json({ output });
   } catch (error) {
-    console.error('❌ OpenRouter API Error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Something went wrong with the AI API.' });
+    console.error('❌ OpenRouter Error:', error.response?.data || error.message);
+    res.status(500).json({ 
+      error: "OpenRouter API failed. Check server logs.",
+      details: error.response?.data?.error?.message || error.message 
+    });
   }
 });
 
