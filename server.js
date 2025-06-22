@@ -81,46 +81,48 @@ app.post('/api/login', async (req, res) => {
 // 🤖 Enhanced Analyze Endpoint
 app.post('/api/analyze', async (req, res) => {
   const { prompt, mode } = req.body;
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim(); // Critical trim()
 
-  // Debugging logs (check Render logs)
-  console.log("🔑 API Key First 5 Chars:", apiKey?.slice(0, 5) + "...");
-  console.log("🌐 Request Origin:", req.headers.origin);
+  // Debugging
+  console.log("🔑 Key Prefix:", apiKey?.slice(0, 8) + "...");
+  console.log("🌐 Origin:", req.headers.origin);
 
   try {
-    const response = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
+    const response = await axios({
+      method: 'post',
+      url: 'https://openrouter.ai/api/v1/chat/completions',
+      data: {
         model: 'deepseek/deepseek-r1-0528:free',
         messages: [{ role: 'user', content: prompt }],
         temperature: mode === 'savage' ? 0.9 : 0.7,
         max_tokens: 150
       },
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`.trim(), // Trim whitespace
-          'HTTP-Referer': req.headers.origin || 'http://localhost:3000',
-          'X-Title': 'CrushAnalyzer (Production)',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        timeout: 10000 // 10-second timeout
-      }
-    );
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': req.headers.origin || 'http://localhost:3000',
+        'X-Title': 'CrushAnalyzer-Prod',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      timeout: 8000
+    });
 
     res.json({ output: response.data.choices[0].message.content });
   } catch (error) {
-    console.error("💥 FULL ERROR DUMP:", {
-      headersSent: {
-        auth: error.config?.headers?.Authorization?.slice(0, 10) + '...',
-        referer: error.config?.headers?.['HTTP-Referer']
+    console.error("💣 FULL ERROR:", {
+      config: {
+        headers: {
+          // Logs first/last 4 chars for security
+          auth: error.config?.headers?.Authorization?.slice(0, 4) + '...' + 
+                error.config?.headers?.Authorization?.slice(-4),
+          referer: error.config?.headers?.['HTTP-Referer']
+        }
       },
-      response: error.response?.data,
-      stack: error.stack
+      response: error.response?.data
     });
     res.status(500).json({ 
-      error: "AI service unavailable",
-      details: error.response?.data?.error?.message || "Internal server error" 
+      error: "AI service error",
+      details: "Please try again later" 
     });
   }
 });
