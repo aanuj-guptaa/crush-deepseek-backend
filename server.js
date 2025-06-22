@@ -81,48 +81,52 @@ app.post('/api/login', async (req, res) => {
 // 🤖 Enhanced Analyze Endpoint
 app.post('/api/analyze', async (req, res) => {
   const { prompt, mode } = req.body;
-  const apiKey = process.env.OPENROUTER_API_KEY?.trim(); // Critical trim()
-
-  // Debugging
-  console.log("🔑 Key Prefix:", apiKey?.slice(0, 8) + "...");
-  console.log("🌐 Origin:", req.headers.origin);
+  
+  // 1. Use this TEMPORARY hardcoded key (replace with your NEW OpenRouter key)
+  const apiKey = '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'; // Replace x's with your actual new key
+  
+  // 2. Debug logs (check Render logs)
+  console.log("🔑 Using Key:", apiKey.slice(0, 8) + '...' + apiKey.slice(-4));
+  console.log("🌍 Origin:", req.headers.origin);
 
   try {
-    const response = await axios({
-      method: 'post',
-      url: 'https://openrouter.ai/api/v1/chat/completions',
-      data: {
-        model: 'deepseek/deepseek-r1-0528:free',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: mode === 'savage' ? 0.9 : 0.7,
-        max_tokens: 150
-      },
+    // 3. Using axios.create() for better header control
+    const api = axios.create({
+      baseURL: 'https://openrouter.ai/api/v1',
+      timeout: 10000,
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'HTTP-Referer': req.headers.origin || 'http://localhost:3000',
-        'X-Title': 'CrushAnalyzer-Prod',
+        'X-Title': 'CrushAnalyzer',
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-      },
-      timeout: 8000
+      }
+    });
+
+    // 4. Make the request
+    const response = await api.post('/chat/completions', {
+      model: 'deepseek/deepseek-r1-0528:free',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: mode === 'savage' ? 0.9 : 0.7,
+      max_tokens: 150
     });
 
     res.json({ output: response.data.choices[0].message.content });
+    
   } catch (error) {
-    console.error("💣 FULL ERROR:", {
-      config: {
-        headers: {
-          // Logs first/last 4 chars for security
-          auth: error.config?.headers?.Authorization?.slice(0, 4) + '...' + 
-                error.config?.headers?.Authorization?.slice(-4),
-          referer: error.config?.headers?.['HTTP-Referer']
-        }
-      },
-      response: error.response?.data
-    });
-    res.status(500).json({ 
-      error: "AI service error",
-      details: "Please try again later" 
+    // 5. Enhanced error diagnostics
+    const errorInfo = {
+      time: new Date().toISOString(),
+      keyUsed: apiKey.slice(0, 8) + '...' + apiKey.slice(-4),
+      headersSent: error.config?.headers,
+      openRouterResponse: error.response?.data,
+      fullError: error.message
+    };
+    console.error("💥 CRITICAL FAILURE:", errorInfo);
+    
+    res.status(500).json({
+      error: "AI service unavailable",
+      details: "Technical team has been notified" // User-friendly message
     });
   }
 });
