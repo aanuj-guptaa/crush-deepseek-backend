@@ -94,12 +94,12 @@ app.post('/api/analyze', async (req, res) => {
         model: 'deepseek/deepseek-r1-0528:free',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 150,
-        temperature: req.body.mode === 'savage' ? 0.9 : 0.7, // Dynamic based on frontend's "mode"
+        temperature: req.body.mode === 'savage' ? 0.9 : 0.7, 
       },
       {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://your-website-url.com', // Replace with your frontend URL
+          'HTTP-Referer': 'http://localhost:3000', 
           'X-Title': 'CrushAnalyzer',
           'Content-Type': 'application/json',
         },
