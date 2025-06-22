@@ -83,10 +83,9 @@ app.post('/api/analyze', async (req, res) => {
   const { prompt, mode } = req.body;
   const apiKey = process.env.OPENROUTER_API_KEY;
 
-  if (!apiKey) {
-    console.error("❌ API key missing!");
-    return res.status(500).json({ error: "Server configuration error" });
-  }
+  // Debugging logs (check Render logs)
+  console.log("🔑 API Key First 5 Chars:", apiKey?.slice(0, 5) + "...");
+  console.log("🌐 Request Origin:", req.headers.origin);
 
   try {
     const response = await axios.post(
@@ -99,25 +98,29 @@ app.post('/api/analyze', async (req, res) => {
       },
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${apiKey}`.trim(), // Trim whitespace
           'HTTP-Referer': req.headers.origin || 'http://localhost:3000',
-          'X-Title': 'CrushAnalyzer',
+          'X-Title': 'CrushAnalyzer (Production)',
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        }
+        },
+        timeout: 10000 // 10-second timeout
       }
     );
 
     res.json({ output: response.data.choices[0].message.content });
   } catch (error) {
-    console.error("💥 FULL OpenRouter ERROR:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      headersSent: error.config?.headers?.Authorization?.slice(0, 10) + '...'
+    console.error("💥 FULL ERROR DUMP:", {
+      headersSent: {
+        auth: error.config?.headers?.Authorization?.slice(0, 10) + '...',
+        referer: error.config?.headers?.['HTTP-Referer']
+      },
+      response: error.response?.data,
+      stack: error.stack
     });
     res.status(500).json({ 
-      error: "OpenRouter request failed",
-      details: error.response?.data?.error?.message || "Check server logs" 
+      error: "AI service unavailable",
+      details: error.response?.data?.error?.message || "Internal server error" 
     });
   }
 });
