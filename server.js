@@ -80,11 +80,12 @@ app.post('/api/login', async (req, res) => {
 
 // 🤖 Analyze route (AI)
 app.post('/api/analyze', async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt,mode } = req.body;
   const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: "❌ API key missing in server environment." });
+    console.error("missing openrouter key in environemtn variable")
+    return res.status(500).json({ error: "❌server config error" });
   }
 
   try {
@@ -94,7 +95,7 @@ app.post('/api/analyze', async (req, res) => {
         model: 'deepseek/deepseek-r1-0528:free',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 150,
-        temperature: req.body.mode === 'savage' ? 0.9 : 0.7, 
+        temperature: mode === 'savage' ? 0.9 : 0.7, 
       },
       {
         headers: {
@@ -109,10 +110,14 @@ app.post('/api/analyze', async (req, res) => {
     const output = response.data.choices[0]?.message?.content || "⚠️ No response generated.";
     res.json({ output });
   } catch (error) {
-    console.error('❌ OpenRouter Error:', error.response?.data || error.message);
+    console.error('❌ Full OpenRouter Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
     res.status(500).json({ 
-      error: "OpenRouter API failed. Check server logs.",
-      details: error.response?.data?.error?.message || error.message 
+      error: "Failed to analyze chat",
+      details: error.response?.data?.error?.message || "Check server logs" 
     });
   }
 });
