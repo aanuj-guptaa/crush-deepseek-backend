@@ -52,7 +52,7 @@ app.post('/api/signup', async (req, res) => {
     );
     res.status(201).json({ user: result.rows[0] });
   } catch (error) {
-    console.error('❌ Signup error:', error);
+    console.error('❌ Signup error:', error.message, error.stack);
     res.status(500).json({ message: 'Signup failed. Email might already be registered.' });
   }
 });
