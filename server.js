@@ -14,11 +14,10 @@ const PORT = process.env.PORT || 3001; // Consolidated port declaration
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3002'],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  origin: true, // Dynamically allow all origins
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 
 app.use(bodyParser.json());
 
