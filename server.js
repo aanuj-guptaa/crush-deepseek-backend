@@ -18,7 +18,6 @@ app.use(cors({
   credentials: true,
 }));
 
-
 app.use(bodyParser.json());
 
 // Initialize database
@@ -95,7 +94,7 @@ app.post('/api/analyze', async (req, res) => {
       timeout: 10000,
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': req.headers.origin || 'http://localhost:3000',
+        'HTTP-Referer': req.headers.origin || 'http://localhost:3001',
         'X-Title': 'CrushAnalyzer',
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -104,7 +103,7 @@ app.post('/api/analyze', async (req, res) => {
 
     // 4. Make the request
     const response = await api.post('/chat/completions', {
-      model: 'deepseek/deepseek-r1-0528:free',
+      model: 'mistralai/mistral-small-3.2-24b-instruct-2506:free',
       messages: [{ role: 'user', content: prompt }],
       temperature: mode === 'savage' ? 0.9 : 0.7,
       max_tokens: 150
