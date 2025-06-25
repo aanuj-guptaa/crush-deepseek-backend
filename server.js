@@ -109,7 +109,14 @@ app.post('/api/analyze', async (req, res) => {
       max_tokens: 150
     });
 
-    res.json({ output: response.data.choices[0].message.content });
+    const output = response.data?.choices?.[0]?.message?.content;
+
+    if (!output) {
+  console.warn("⚠️ No output received from AI");
+  return res.status(200).json({ output: "⚠️ No meaningful response generated. Try rephrasing your chat." });
+  }
+
+res.json({ output });
     
   } catch (error) {
     // 5. Enhanced error diagnostics
