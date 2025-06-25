@@ -106,7 +106,7 @@ app.post('/api/analyze', async (req, res) => {
       model: 'deepseek/deepseek-r1-0528:free',
       messages: [{ role: 'user', content: prompt }],
       temperature: mode === 'savage' ? 0.9 : 0.7,
-      max_tokens: 150
+      max_tokens: 500
     });
 
     console.log("💬 Prompt sent to AI:", prompt);
