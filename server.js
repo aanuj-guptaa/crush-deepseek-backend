@@ -109,6 +109,9 @@ app.post('/api/analyze', async (req, res) => {
       max_tokens: 150
     });
 
+    console.log("💬 Prompt sent to AI:", prompt);
+    console.log("🧠 Full AI raw response:", JSON.stringify(response.data, null, 2));
+
     const output = response.data?.choices?.[0]?.message?.content;
 
     if (!output) {
