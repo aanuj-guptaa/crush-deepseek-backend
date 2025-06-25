@@ -103,7 +103,7 @@ app.post('/api/analyze', async (req, res) => {
 
     // 4. Make the request
     const response = await api.post('/chat/completions', {
-      model: 'mistralai/mistral-small-3.2-24b-instruct-2506:free',
+      model: 'deepseek/deepseek-r1-0528:free',
       messages: [{ role: 'user', content: prompt }],
       temperature: mode === 'savage' ? 0.9 : 0.7,
       max_tokens: 150
