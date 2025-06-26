@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const bcrypt = require('bcrypt');
 const pool = require('./db/connect');
-const createUsersTable = require('./db/createTables');
+const createTables = require('./db/createTables');
 
 const app = express();
 const PORT = process.env.PORT || 3001; // Consolidated port declaration
@@ -21,12 +21,12 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Initialize database
-createUsersTable();
+createTables();
 
-// 🚀 Routes
+//ROUTES
 app.get('/', (req, res) => res.send('✨ CrushAnalyzer Backend is Live!'));
 
-// ✅ Database test
+// Database test API
 app.get('/api/test-db', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');
@@ -37,7 +37,7 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-// 🔐 Auth Routes (unchanged)
+// Auth Routes 
 app.post('/api/signup', async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -76,14 +76,13 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// 🤖 Enhanced Analyze Endpoint
+// Analyze API endpoint
 app.post('/api/analyze', async (req, res) => {
   const { prompt, mode } = req.body;
   
-  // 1. Use this TEMPORARY hardcoded key (replace with your NEW OpenRouter key)
-  const apiKey = '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'; // Replace x's with your actual new key
+  const apiKey = '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'; 
   
-  // 2. Debug logs (check Render logs)
+  // 2. Debug logs
   console.log("🔑 Using Key:", apiKey.slice(0, 8) + '...' + apiKey.slice(-4));
   console.log("🌍 Origin:", req.headers.origin);
 
@@ -120,7 +119,16 @@ app.post('/api/analyze', async (req, res) => {
   }
 
 res.json({ output });
-    
+try {
+  await pool.query(
+    `INSERT INTO analyses (user_id, chat, mode, response)
+     VALUES ($1, $2, $3, $4)`,
+    [null, prompt, mode, output]
+  );
+  console.log("✅ Analysis saved to DB");
+} catch (dbError) {
+  console.error("❌ Failed to save analysis:", dbError.message);
+}
   } catch (error) {
     // 5. Enhanced error diagnostics
     const errorInfo = {
