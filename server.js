@@ -76,6 +76,23 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+//HISTORY
+
+app.get('/api/history/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const result = await pool.query(
+      'SELECT chat, response, mode, created_at FROM analyses WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+    res.json({ history: result.rows });
+  } catch (error) {
+    console.error('❌ History fetch error:', error);
+    res.status(500).json({ error: 'Could not fetch history' });
+  }
+});
+
+
 // Analyze API endpoint
 app.post('/api/analyze', async (req, res) => {
   const { prompt, mode } = req.body;
